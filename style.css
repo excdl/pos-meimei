@@ -1,4 +1,4 @@
-<style>
+
 body{margin:0;font-family:"Microsoft JhengHei",Arial,sans-serif;background:#f5f5f5;}
 button{cursor:pointer;outline:none;transition:0.2s;}
 #posApp{display:flex;height:100vh;}
@@ -558,4 +558,3 @@ button{cursor:pointer;outline:none;transition:0.2s;}
     }
   }
   
-</style>
