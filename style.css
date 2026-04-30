@@ -42,7 +42,7 @@ button{cursor:pointer;outline:none;transition:0.2s;}
 /* 商品名稱 */
 .product-card h4 {
     margin: 0;
-    font-size: 0.91em;
+    font-size: 1em;
     line-height: 1.2em;
     white-space: normal; /* 允許換行 */
     word-wrap: break-word;
