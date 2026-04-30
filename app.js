@@ -1,4 +1,4 @@
-<script>
+
 const API_URL = "https://script.google.com/macros/s/AKfycbxIONfqq50nNi5V0XKYaWN1k4-1pBhUChyOLsFOkCYGUr55y6FfG_Vb5f3Jrl7l9xk0Kg/exec";
 function formatNumber(num) { if (num === null || num === undefined || num === "") return "0"; let n = Number(num); if (isNaN(n)) return "0"; return n.toLocaleString('zh-TW'); }
 let POS_STORE = "";
@@ -1126,4 +1126,4 @@ async function startCheckoutFlow(checkoutBtn, originalText) {
 
   
 
-</script>
+
