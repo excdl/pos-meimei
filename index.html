@@ -6,8 +6,6 @@
 <title>meimei POS 系統</title>
 
 <link rel="stylesheet" href="style.css">
-<body>
-
 <!-- 登入頁面 -->
 <div id="loginPage" style="display:flex;justify-content:center;align-items:center;height:100vh;background:#3498db;">
   <div style="background:white;padding:40px 30px;border-radius:12px;box-shadow:0 5px 20px rgba(0,0,0,0.2);width:320px;text-align:center;">
@@ -51,17 +49,7 @@
   
  <!-- ===== 業代 / 人數 / 低消 同行 ===== -->
 <div id="tableInfo" style="margin:8px 0; font-size:13.2px; display:flex; align-items:center; gap:10px; flex-wrap:nowrap;">
-
-  <label style="white-space:nowrap;">
-    業代：
-    <input id="salesInput"
-           list="salesList"
-           placeholder="請選擇業代"
-           style="width:132px; font-size:13.2px; padding:2px 4px;">
-    <datalist id="salesList"></datalist>
-  </label>
-
-  <label style="white-space:nowrap;">
+  
     人數：
     <input id="peopleCount" type="number" min="1" value="1"
            style="width:55px; font-size:13.2px; padding:2px 4px;">
@@ -73,6 +61,16 @@
            style="width:77px; font-size:13.2px; text-align:right; padding:2px 4px;">
     元/人
   </label>
+    <label style="white-space:nowrap;">
+    業代：
+    <input id="salesInput"
+           list="salesList"
+           placeholder="請選擇業代"
+           style="width:132px; font-size:13.2px; padding:2px 4px;">
+    <datalist id="salesList"></datalist>
+  </label>
+
+  <label style="white-space:nowrap;">
 
 </div>
 
