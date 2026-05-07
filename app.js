@@ -157,7 +157,7 @@ async function fetchSalesList() {
     });
 
     // ⭐ 預設帶入登入者
-    document.getElementById("salesInput").value = data.defaultUser || "";
+    
   } catch (err) {
     console.error("載入業代失敗", err);
   }
