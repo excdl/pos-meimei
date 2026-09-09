@@ -1,4 +1,3 @@
-
 const API_URL = "https://script.google.com/macros/s/AKfycbxIONfqq50nNi5V0XKYaWN1k4-1pBhUChyOLsFOkCYGUr55y6FfG_Vb5f3Jrl7l9xk0Kg/exec";
 function formatNumber(num) { if (num === null || num === undefined || num === "") return "0"; let n = Number(num); if (isNaN(n)) return "0"; return n.toLocaleString('zh-TW'); }
 let POS_STORE = "";
@@ -157,7 +156,8 @@ async function fetchSalesList() {
     });
 
     // ⭐ 預設帶入登入者
-    
+    // ⭐ 改為預設空白
+document.getElementById("salesInput").value = "";
   } catch (err) {
     console.error("載入業代失敗", err);
   }
@@ -292,8 +292,6 @@ function addPOSItem(p, forceStore = false) {
             price: pricePerUnit,
             unit: unit,
             discount: null,
-         // ⭐ 判斷是不是開瓶費（用你後台的名稱）
-          isCorkage: p["商品名稱"] === "開瓶費",
 
             // ⭐ 存酒相關
             isStored: forceStore,
@@ -352,7 +350,7 @@ function renderCart() {
     const box = document.getElementById("posCart");
     box.innerHTML = "";
     let totalBeforeTax = 0;
-    let totalForMinConsume = 0; // ⭐ 只算非開瓶費
+
     posCart.forEach((item, i) => {
         let sub = item.quantity * item.price;
 
@@ -377,9 +375,6 @@ function renderCart() {
         }
 
         totalBeforeTax += sub;
-        if (!item.isCorkage) {
-        totalForMinConsume += sub;
-        }
 
         const row = document.createElement("div");
         row.className = "cartRow";
@@ -406,19 +401,23 @@ function renderCart() {
     let afterTax = beforeTax + tax;
 
     // ===== 計算折扣/低消 =====
-    let discountValue =      Number(document.getElementById("discount").value) || 0;
-    let actualAmount = afterTax - discountValue;
+let discountValue = Number(document.getElementById("discount").value) || 0;
+let actualAmount = afterTax - discountValue;
 
-// ⭐ 低消只看「非開瓶費」
-let minConsume = getMinConsumeTotal();
-let baseAmount = Math.max(totalForMinConsume, minConsume);
+let people = Number(document.getElementById("peopleCount")?.value) || 0;
+let perMin = Number(document.getElementById("minConsumeInput")?.value) || 0;
+let minConsume = people * perMin;
 
-// ⭐ 開瓶費（從總額扣掉商品）
-let corkageAmount = totalBeforeTax - totalForMinConsume;
+let receivable = 0;
 
-// ⭐ 最終應收
-let receivable = baseAmount + corkageAmount;
-
+// ✅ 新規則（300 為界）
+if (perMin <= 300 && perMin > 0) {
+    // 低消 <= 300 → 低消 + 消費
+    receivable = actualAmount + minConsume;
+} else {
+    // > 300 → 原本邏輯
+    receivable = Math.max(actualAmount, minConsume);
+}
     // ===== 更新 UI =====
     document.getElementById("beforeTax").innerText = formatNumber(beforeTax);
     document.getElementById("taxAmount").innerText = formatNumber(tax);
@@ -947,35 +946,63 @@ document.getElementById("posCheckout").onclick = async function () {
         return; // 停止結帳流程
     }
 
-    let actual = parseNumber(document.getElementById("afterTax").innerText) - (Number(document.getElementById("discount").value) || 0);
-    let min = getMinConsumeTotal();
+let actual = parseNumber(document.getElementById("afterTax").innerText) 
+             - (Number(document.getElementById("discount").value) || 0);
 
-    // 如果消費金額不足，顯示最低消費提示框
+let people = Number(document.getElementById("peopleCount")?.value) || 0;
+let perMin = Number(document.getElementById("minConsumeInput")?.value) || 0;
+let min = people * perMin;
+
+let finalAmount;
+
+// ===== 新規則 =====
+if (perMin <= 300 && perMin > 0) {
+
+    // ✅ 低消 ≤ 300 → 直接 低消 + 消費
+    finalAmount = actual + min;
+
+} else {
+
+    // ✅ > 300 才需要檢查是否未達低消
     if (actual < min && !allowMinConsumeCheckout) {
-        // 顯示消費金額不足的提示框
-        const message = `您的消費金額為 ${actual} 元，低於最低消費額 ${min} 元，是否確認結帳？`;
+
+        const message = `您的消費金額為 ${actual} 元，
+低於最低消費額 ${min} 元，是否確認結帳？`;
+
         if (confirm(message)) {
-            // 用戶選擇確認結帳，即使未達最低消費，強制使用最低消費金額
-            allowMinConsumeCheckout = true; // 設置允許最低消費結帳
-            document.getElementById("afterTax").innerText = min; // 強制將消費金額設為最低消費金額
-            startCheckoutFlow(checkoutBtn, originalText); // 直接進行結帳流程
+            allowMinConsumeCheckout = true;
+            finalAmount = min;
         } else {
-            // 用戶選擇取消結帳，恢復結帳按鈕
             checkoutBtn.innerText = originalText;
             checkoutBtn.disabled = false;
+            return;
         }
-        return; // 停止結帳流程
+
+    } else {
+        finalAmount = Math.max(actual, min);
     }
+}
+        
 
     allowMinConsumeCheckout = false; // 預設不允許最低消費結帳
+    
+   const discountVal = Number(document.getElementById("discount").value) || 0;
 
+// 🚨 總額為0判斷（新規則）
+if (finalAmount <= 0 && discountVal <= 0) {
+    alert("❌ 結帳總額為 0，無法結帳！");
+    checkoutBtn.innerText = originalText;
+    checkoutBtn.disabled = false;
+    return;
+}
+
+        // ===== 購物車為空處理（統一規則）=====
     if (posCart.length === 0) {
-        alert("購物車是空的。");
-        checkoutBtn.innerText = originalText; // 恢復按鈕文字
-        checkoutBtn.disabled = false; // 恢復按鈕可點擊
-        return;
-    }
-
+    alert("❌ 購物車不可為空，請至少加入一筆商品！");
+    checkoutBtn.innerText = originalText;
+    checkoutBtn.disabled = false;
+    return;
+}
     // 如果沒有進入最低消費檢查，則直接繼續結帳流程
     startCheckoutFlow(checkoutBtn, originalText);
 };
@@ -1123,7 +1150,6 @@ async function startCheckoutFlow(checkoutBtn, originalText) {
         checkoutBtn.disabled = false;
     }
 };
-
   
 
 
